@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACME Outreach Planner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .nav-item { transition: all 0.15s; }
+    .nav-item.active { background: rgba(99,102,241,0.15); color: #6366f1; }
+    .nav-item:hover:not(.active) { background: rgba(255,255,255,0.07); }
+    .modal-backdrop { backdrop-filter: blur(2px); }
+    .status-new        { background:#dbeafe; color:#1d4ed8; }
+    .status-contacted  { background:#fef9c3; color:#a16207; }
+    .status-replied    { background:#dcfce7; color:#15803d; }
+    .status-meeting    { background:#f3e8ff; color:#7e22ce; }
+    .status-followup   { background:#ffedd5; color:#c2410c; }
+    .status-notint     { background:#fee2e2; color:#b91c1c; }
+    .tag-initial    { background:#dbeafe; color:#1e40af; }
+    .tag-followup   { background:#fef3c7; color:#92400e; }
+    .tag-meeting    { background:#f0fdf4; color:#166534; }
+    .tag-linkedin   { background:#ede9fe; color:#5b21b6; }
+    .tag-reeng      { background:#fce7f3; color:#9d174d; }
+    .tag-postmeet   { background:#ecfdf5; color:#065f46; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); border-color: #6366f1 !important; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex">
+
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+<aside class="w-60 min-h-screen bg-slate-900 flex flex-col fixed left-0 top-0 z-30">
+  <!-- Brand -->
+  <div class="px-5 py-5 border-b border-slate-700/50">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-brand-500 rounded-lg flex items-center justify-center">
+        <i class="fa-solid fa-paper-plane text-white text-sm"></i>
+      </div>
+      <div>
+        <div class="text-white font-bold text-sm leading-tight">ACME Outreach</div>
+        <div class="text-slate-400 text-xs">Planner v1.0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="flex-1 px-3 py-4 space-y-1">
+    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 text-sm font-medium">
+      <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
+    </button>
+    <button onclick="switchTab('contacts')" id="nav-contacts" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 text-sm font-medium">
+      <i class="fa-solid fa-users w-4 text-center"></i> Contacts
+      <span id="contacts-badge" class="ml-auto bg-slate-700 text-slate-300 text-xs px-1.5 py-0.5 rounded-full">15</span>
+    </button>
+    <button onclick="switchTab('templates')" id="nav-templates" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 text-sm font-medium">
+      <i class="fa-solid fa-file-lines w-4 text-center"></i> Templates
+      <span class="ml-auto bg-slate-700 text-slate-300 text-xs px-1.5 py-0.5 rounded-full">7</span>
+    </button>
+    <button onclick="switchTab('log')" id="nav-log" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 text-sm font-medium">
+      <i class="fa-solid fa-clock-rotate-left w-4 text-center"></i> Activity Log
+    </button>
+  </nav>
+
+  <!-- User -->
+  <div class="px-4 py-4 border-t border-slate-700/50">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold">JD</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-white text-xs font-medium truncate">Jordan Davies</div>
+        <div class="text-slate-400 text-xs truncate">Head of Marketing</div>
+      </div>
+      <i class="fa-solid fa-gear text-slate-500 text-xs cursor-pointer hover:text-slate-300 transition-colors"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════ MAIN ═══════════════════════════ -->
+<main class="ml-60 flex-1 min-h-screen">
+
+  <!-- ──────────── DASHBOARD ──────────── -->
+  <div id="tab-dashboard" class="tab-content active p-8">
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Good morning, Jordan 👋</h1>
+        <p class="text-slate-500 text-sm mt-1" id="dashboard-date">Monday, March 10, 2026</p>
+      </div>
+      <button onclick="switchTab('contacts'); openAddContactModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg flex items-center gap-2 transition-colors">
+        <i class="fa-solid fa-plus"></i> Add Contact
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-4 gap-5 mb-8">
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-slate-500 text-sm">Total Contacts</span>
+          <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
+            <i class="fa-solid fa-users text-blue-500 text-sm"></i>
+          </div>
+        </div>
+        <div class="text-3xl font-bold text-slate-900" id="stat-total">15</div>
+        <div class="text-xs text-green-600 mt-1"><i class="fa-solid fa-arrow-up"></i> 4 added this week</div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-slate-500 text-sm">Emails Sent (7d)</span>
+          <div class="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center">
+            <i class="fa-solid fa-envelope text-indigo-500 text-sm"></i>
+          </div>
+        </div>
+        <div class="text-3xl font-bold text-slate-900">23</div>
+        <div class="text-xs text-green-600 mt-1"><i class="fa-solid fa-arrow-up"></i> 18% vs last week</div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-slate-500 text-sm">Response Rate</span>
+          <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
+            <i class="fa-solid fa-reply text-emerald-500 text-sm"></i>
+          </div>
+        </div>
+        <div class="text-3xl font-bold text-slate-900">31%</div>
+        <div class="text-xs text-green-600 mt-1"><i class="fa-solid fa-arrow-up"></i> +5% vs last month</div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-slate-500 text-sm">Meetings Booked</span>
+          <div class="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center">
+            <i class="fa-solid fa-calendar-check text-purple-500 text-sm"></i>
+          </div>
+        </div>
+        <div class="text-3xl font-bold text-slate-900">4</div>
+        <div class="text-xs text-green-600 mt-1"><i class="fa-solid fa-arrow-up"></i> 2 this week</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+      <!-- Recent Activity -->
+      <div class="col-span-2 bg-white rounded-xl border border-slate-200">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="font-semibold text-slate-800">Recent Activity</h2>
+          <button onclick="switchTab('log')" class="text-brand-600 text-xs hover:underline">View all</button>
+        </div>
+        <div class="divide-y divide-slate-50">
+          <div class="px-5 py-3.5 flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-envelope text-indigo-600 text-xs"></i></div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-slate-800"><span class="font-medium">Email sent</span> to <span class="font-medium">Nina Patel</span> · Elevate Digital</p>
+              <p class="text-xs text-slate-400 mt-0.5">Meeting confirmation - calendar invite attached</p>
+            </div>
+            <span class="text-xs text-slate-400 flex-shrink-0">2h ago</span>
+          </div>
+          <div class="px-5 py-3.5 flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-reply text-green-600 text-xs"></i></div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-slate-800"><span class="font-medium">Reply received</span> from <span class="font-medium">Carlos Rivera</span> · BlueSky Ventures</p>
+              <p class="text-xs text-slate-400 mt-0.5">Interested in a demo, asked for availability next week</p>
+            </div>
+            <span class="text-xs text-slate-400 flex-shrink-0">4h ago</span>
+          </div>
+          <div class="px-5 py-3.5 flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-calendar text-blue-600 text-xs"></i></div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-slate-800"><span class="font-medium">Meeting booked</span> with <span class="font-medium">Emma Williams</span> · StartupHub</p>
+              <p class="text-xs text-slate-400 mt-0.5">30-min discovery call · Wed Mar 12, 2:00 PM</p>
+            </div>
+            <span class="text-xs text-slate-400 flex-shrink-0">Yesterday</span>
+          </div>
+          <div class="px-5 py-3.5 flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-phone text-yellow-600 text-xs"></i></div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-slate-800"><span class="font-medium">Call completed</span> with <span class="font-medium">Sarah Chen</span> · Nexus Technologies</p>
+              <p class="text-xs text-slate-400 mt-0.5">Discussed Q2 marketing budget - strong interest in proposal</p>
+            </div>
+            <span class="text-xs text-slate-400 flex-shrink-0">Yesterday</span>
+          </div>
+          <div class="px-5 py-3.5 flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fab fa-linkedin text-purple-600 text-xs"></i></div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-slate-800"><span class="font-medium">LinkedIn connect</span> with <span class="font-medium">Tom Bradley</span> · GreenLeaf Tech</p>
+              <p class="text-xs text-slate-400 mt-0.5">Connection accepted, sent intro message</p>
+            </div>
+            <span class="text-xs text-slate-400 flex-shrink-0">2 days ago</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Follow-ups Due -->
+      <div class="bg-white rounded-xl border border-slate-200">
+        <div class="px-5 py-4 border-b border-slate-100">
+          <h2 class="font-semibold text-slate-800">Follow-ups Due</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Contacts to reach out to</p>
+        </div>
+        <div class="divide-y divide-slate-50">
+          <div class="px-5 py-3.5">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 text-xs font-bold flex-shrink-0">MT</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800 truncate">Michael Torres</p>
+                <p class="text-xs text-slate-400 truncate">BrightPath Solutions</p>
+              </div>
+              <span class="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded font-medium">Overdue</span>
+            </div>
+          </div>
+          <div class="px-5 py-3.5">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold flex-shrink-0">LP</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800 truncate">Lisa Park</p>
+                <p class="text-xs text-slate-400 truncate">Innovate Labs</p>
+              </div>
+              <span class="text-xs bg-yellow-50 text-yellow-600 px-2 py-0.5 rounded font-medium">Today</span>
+            </div>
+          </div>
+          <div class="px-5 py-3.5">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold flex-shrink-0">TB</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800 truncate">Tom Bradley</p>
+                <p class="text-xs text-slate-400 truncate">GreenLeaf Tech</p>
+              </div>
+              <span class="text-xs bg-yellow-50 text-yellow-600 px-2 py-0.5 rounded font-medium">Tomorrow</span>
+            </div>
+          </div>
+          <div class="px-5 py-3.5">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-xs font-bold flex-shrink-0">JO</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800 truncate">James O'Brien</p>
+                <p class="text-xs text-slate-400 truncate">TechForward</p>
+              </div>
+              <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-medium">Mar 12</span>
+            </div>
+          </div>
+          <div class="px-5 py-3.5">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-pink-700 text-xs font-bold flex-shrink-0">JM</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800 truncate">Jessica Moore</p>
+                <p class="text-xs text-slate-400 truncate">DataStream</p>
+              </div>
+              <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-medium">Mar 13</span>
+            </div>
+          </div>
+        </div>
+        <div class="px-5 py-3 border-t border-slate-100">
+          <button onclick="switchTab('contacts')" class="text-brand-600 text-xs hover:underline">View all contacts →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline -->
+    <div class="mt-6 bg-white rounded-xl border border-slate-200 p-5">
+      <h2 class="font-semibold text-slate-800 mb-4">Pipeline Overview</h2>
+      <div class="grid grid-cols-6 gap-3">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-slate-800">3</div>
+          <div class="text-xs text-slate-500 mt-1">New</div>
+          <div class="h-1.5 bg-blue-200 rounded-full mt-2"><div class="h-full bg-blue-500 rounded-full" style="width:20%"></div></div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-slate-800">4</div>
+          <div class="text-xs text-slate-500 mt-1">Contacted</div>
+          <div class="h-1.5 bg-yellow-200 rounded-full mt-2"><div class="h-full bg-yellow-500 rounded-full" style="width:27%"></div></div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-slate-800">3</div>
+          <div class="text-xs text-slate-500 mt-1">Follow-up</div>
+          <div class="h-1.5 bg-orange-200 rounded-full mt-2"><div class="h-full bg-orange-500 rounded-full" style="width:20%"></div></div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-slate-800">3</div>
+          <div class="text-xs text-slate-500 mt-1">Replied</div>
+          <div class="h-1.5 bg-green-200 rounded-full mt-2"><div class="h-full bg-green-500 rounded-full" style="width:20%"></div></div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-slate-800">2</div>
+          <div class="text-xs text-slate-500 mt-1">Meeting Booked</div>
+          <div class="h-1.5 bg-purple-200 rounded-full mt-2"><div class="h-full bg-purple-500 rounded-full" style="width:13%"></div></div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-slate-800">1</div>
+          <div class="text-xs text-slate-500 mt-1">Not Interested</div>
+          <div class="h-1.5 bg-red-200 rounded-full mt-2"><div class="h-full bg-red-500 rounded-full" style="width:7%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────── CONTACTS ──────────── -->
+  <div id="tab-contacts" class="tab-content p-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Contacts</h1>
+        <p class="text-slate-500 text-sm mt-1">Manage your outreach pipeline</p>
+      </div>
+      <button onclick="openAddContactModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg flex items-center gap-2 transition-colors">
+        <i class="fa-solid fa-plus"></i> Add Contact
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 mb-5 flex flex-wrap gap-3 items-center">
+      <div class="relative flex-1 min-w-48">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+        <input type="text" id="contact-search" oninput="filterContacts()" placeholder="Search contacts..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 bg-slate-50" />
+      </div>
+      <select id="status-filter" onchange="filterContacts()" class="border border-slate-200 rounded-lg text-sm text-slate-700 px-3 py-2 bg-slate-50">
+        <option value="">All Statuses</option>
+        <option value="New">New</option>
+        <option value="Contacted">Contacted</option>
+        <option value="Follow-up">Follow-up</option>
+        <option value="Replied">Replied</option>
+        <option value="Meeting Booked">Meeting Booked</option>
+        <option value="Not Interested">Not Interested</option>
+      </select>
+      <select id="company-filter" onchange="filterContacts()" class="border border-slate-200 rounded-lg text-sm text-slate-700 px-3 py-2 bg-slate-50">
+        <option value="">All Companies</option>
+      </select>
+      <span id="contact-count" class="text-slate-400 text-sm ml-auto">15 contacts</span>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200">
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Name</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Company</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Title</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Last Contact</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="contacts-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────── TEMPLATES ──────────── -->
+  <div id="tab-templates" class="tab-content p-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Email Templates</h1>
+        <p class="text-slate-500 text-sm mt-1">Reusable outreach templates for every stage</p>
+      </div>
+      <button onclick="openAddTemplateModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg flex items-center gap-2 transition-colors">
+        <i class="fa-solid fa-plus"></i> New Template
+      </button>
+    </div>
+
+    <!-- Category tabs -->
+    <div class="flex gap-2 mb-6 flex-wrap">
+      <button onclick="filterTemplates('')" id="tcat-all" class="template-cat-btn bg-brand-600 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors">All</button>
+      <button onclick="filterTemplates('Initial')" id="tcat-Initial" class="template-cat-btn bg-white border border-slate-200 text-slate-600 text-sm px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors">Initial</button>
+      <button onclick="filterTemplates('Follow-up')" id="tcat-Follow-up" class="template-cat-btn bg-white border border-slate-200 text-slate-600 text-sm px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors">Follow-up</button>
+      <button onclick="filterTemplates('Meeting')" id="tcat-Meeting" class="template-cat-btn bg-white border border-slate-200 text-slate-600 text-sm px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors">Meeting</button>
+      <button onclick="filterTemplates('LinkedIn')" id="tcat-LinkedIn" class="template-cat-btn bg-white border border-slate-200 text-slate-600 text-sm px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors">LinkedIn</button>
+      <button onclick="filterTemplates('Re-engagement')" id="tcat-Re-engagement" class="template-cat-btn bg-white border border-slate-200 text-slate-600 text-sm px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors">Re-engagement</button>
+    </div>
+
+    <div id="templates-grid" class="grid grid-cols-2 gap-5"></div>
+  </div>
+
+  <!-- ──────────── LOG ──────────── -->
+  <div id="tab-log" class="tab-content p-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Activity Log</h1>
+        <p class="text-slate-500 text-sm mt-1">Track every touchpoint in your outreach</p>
+      </div>
+      <button onclick="openAddLogModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg flex items-center gap-2 transition-colors">
+        <i class="fa-solid fa-plus"></i> Log Activity
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 mb-5 flex flex-wrap gap-3 items-center">
+      <div class="relative flex-1 min-w-48">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+        <input type="text" id="log-search" oninput="filterLog()" placeholder="Search log..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 bg-slate-50" />
+      </div>
+      <select id="log-type-filter" onchange="filterLog()" class="border border-slate-200 rounded-lg text-sm text-slate-700 px-3 py-2 bg-slate-50">
+        <option value="">All Types</option>
+        <option value="Email Sent">Email Sent</option>
+        <option value="Reply Received">Reply Received</option>
+        <option value="Call">Call</option>
+        <option value="Meeting">Meeting</option>
+        <option value="LinkedIn">LinkedIn</option>
+        <option value="Note">Note</option>
+      </select>
+      <span id="log-count" class="text-slate-400 text-sm ml-auto">20 entries</span>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200">
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Contact</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Company</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Activity</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Notes</th>
+              <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ═══════════════════════════ MODALS ═══════════════════════════ -->
+
+<!-- Add Contact Modal -->
+<div id="modal-contact" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/40">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4">
+    <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+      <h3 class="text-lg font-semibold text-slate-900">Add New Contact</h3>
+      <button onclick="closeModal('modal-contact')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1.5">First Name *</label>
+          <input type="text" id="c-firstname" placeholder="Sarah" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1.5">Last Name *</label>
+          <input type="text" id="c-lastname" placeholder="Chen" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Job Title</label>
+        <input type="text" id="c-title" placeholder="VP Marketing" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Company *</label>
+        <input type="text" id="c-company" placeholder="Nexus Technologies" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Email *</label>
+        <input type="email" id="c-email" placeholder="sarah.chen@nexustech.com" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Phone</label>
+        <input type="text" id="c-phone" placeholder="+1 (555) 000-0000" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Status</label>
+        <select id="c-status" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800">
+          <option value="New">New</option>
+          <option value="Contacted">Contacted</option>
+          <option value="Follow-up">Follow-up</option>
+          <option value="Replied">Replied</option>
+          <option value="Meeting Booked">Meeting Booked</option>
+          <option value="Not Interested">Not Interested</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Notes</label>
+        <textarea id="c-notes" rows="2" placeholder="Any context about this contact..." class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 resize-none"></textarea>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+      <button onclick="closeModal('modal-contact')" class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>
+      <button onclick="saveContact()" class="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-brand-700 rounded-lg font-medium">Save Contact</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Template Modal -->
+<div id="modal-template" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/40">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4">
+    <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+      <h3 class="text-lg font-semibold text-slate-900">New Email Template</h3>
+      <button onclick="closeModal('modal-template')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1.5">Template Name *</label>
+          <input type="text" id="t-name" placeholder="Initial Cold Outreach" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1.5">Category</label>
+          <select id="t-category" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800">
+            <option value="Initial">Initial</option>
+            <option value="Follow-up">Follow-up</option>
+            <option value="Meeting">Meeting</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Re-engagement">Re-engagement</option>
+            <option value="Post-meeting">Post-meeting</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Subject Line</label>
+        <input type="text" id="t-subject" placeholder="Quick question about [Company]'s marketing stack" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Email Body *</label>
+        <textarea id="t-body" rows="8" placeholder="Hi [FirstName], ..." class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 resize-none font-mono"></textarea>
+      </div>
+      <p class="text-xs text-slate-400">Use <code class="bg-slate-100 px-1 rounded">[FirstName]</code>, <code class="bg-slate-100 px-1 rounded">[Company]</code>, <code class="bg-slate-100 px-1 rounded">[Title]</code> as placeholders.</p>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+      <button onclick="closeModal('modal-template')" class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>
+      <button onclick="saveTemplate()" class="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-brand-700 rounded-lg font-medium">Save Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Log Modal -->
+<div id="modal-log" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/40">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4">
+    <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+      <h3 class="text-lg font-semibold text-slate-900">Log Activity</h3>
+      <button onclick="closeModal('modal-log')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Contact *</label>
+        <select id="l-contact" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800">
+          <option value="">Select a contact...</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1.5">Activity Type *</label>
+          <select id="l-type" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800">
+            <option value="Email Sent">Email Sent</option>
+            <option value="Reply Received">Reply Received</option>
+            <option value="Call">Call</option>
+            <option value="Meeting">Meeting</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Note">Note</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1.5">Date *</label>
+          <input type="date" id="l-date" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Notes</label>
+        <textarea id="l-notes" rows="3" placeholder="What happened? Any key details..." class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 resize-none"></textarea>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+      <button onclick="closeModal('modal-log')" class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>
+      <button onclick="saveLogEntry()" class="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-brand-700 rounded-lg font-medium">Log Activity</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="hidden fixed bottom-6 right-6 bg-slate-900 text-white text-sm px-5 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2">
+  <i class="fa-solid fa-circle-check text-green-400"></i>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- ═══════════════════════════ SCRIPT ═══════════════════════════ -->
+<script>
+// ─── Data ────────────────────────────────────────────
+let contacts = [
+  { id:1,  firstName:'Sarah',   lastName:'Chen',      title:'VP Marketing',         company:'Nexus Technologies',  email:'sarah.chen@nexustech.com',      phone:'+1 (415) 882-3301', status:'Replied',        lastContact:'Mar 8, 2026',  notes:'Discussed Q2 budget. Strong interest in proposal.' },
+  { id:2,  firstName:'Michael', lastName:'Torres',    title:'CMO',                  company:'BrightPath Solutions',email:'m.torres@brightpath.io',        phone:'+1 (312) 554-9920', status:'Contacted',      lastContact:'Mar 1, 2026',  notes:'Sent initial email. No reply yet. Follow-up overdue.' },
+  { id:3,  firstName:'Emma',    lastName:'Williams',  title:'Head of Growth',       company:'StartupHub',          email:'emma.w@startuphub.com',         phone:'+1 (628) 770-4456', status:'Meeting Booked', lastContact:'Mar 9, 2026',  notes:'30-min discovery call booked for Mar 12.' },
+  { id:4,  firstName:'David',   lastName:'Kim',       title:'Marketing Director',   company:'CloudBase Inc',       email:'d.kim@cloudbase.com',           phone:'+1 (206) 341-7700', status:'New',            lastContact:'—',            notes:'Referred by Emma Williams. High priority.' },
+  { id:5,  firstName:'Rachel',  lastName:'Singh',     title:'Brand Manager',        company:'Velocity Group',      email:'r.singh@velocitygrp.com',       phone:'+1 (480) 221-6600', status:'Not Interested', lastContact:'Feb 20, 2026', notes:'Budget constraints this quarter. Re-engage Q3.' },
+  { id:6,  firstName:'James',   lastName:"O'Brien",   title:'VP Sales',             company:'TechForward',         email:'j.obrien@techforward.com',      phone:'+1 (737) 900-5500', status:'Contacted',      lastContact:'Mar 3, 2026',  notes:'Left voicemail. Follow-up email scheduled for Mar 12.' },
+  { id:7,  firstName:'Lisa',    lastName:'Park',      title:'CEO',                  company:'Innovate Labs',       email:'lisa@innovatelabs.co',          phone:'+1 (650) 788-3399', status:'Follow-up',      lastContact:'Mar 4, 2026',  notes:'Replied with interest but needs more info. Send deck today.' },
+  { id:8,  firstName:'Alex',    lastName:'Carter',    title:'Head of Marketing',    company:'PulseMedia',          email:'a.carter@pulsemedia.com',       phone:'+1 (303) 667-8812', status:'Replied',        lastContact:'Mar 7, 2026',  notes:'Wants to see case studies. Send this week.' },
+  { id:9,  firstName:'Nina',    lastName:'Patel',     title:'Growth Lead',          company:'Elevate Digital',     email:'nina.p@elevatedigital.com',     phone:'+1 (512) 934-2211', status:'Meeting Booked', lastContact:'Mar 9, 2026',  notes:'Meeting confirmed: Thu Mar 13, 10am.' },
+  { id:10, firstName:'Robert',  lastName:'Chan',      title:'VP Marketing',         company:'Summit Corp',         email:'r.chan@summitcorp.com',         phone:'+1 (213) 455-8800', status:'New',            lastContact:'—',            notes:'Found via LinkedIn. Strong ICP fit.' },
+  { id:11, firstName:'Jessica', lastName:'Moore',     title:'CMO',                  company:'DataStream',          email:'j.moore@datastream.io',        phone:'+1 (617) 778-4400', status:'Contacted',      lastContact:'Mar 6, 2026',  notes:'Initial email sent. Follow-up due Mar 13.' },
+  { id:12, firstName:'Tom',     lastName:'Bradley',   title:'Director of Marketing',company:'GreenLeaf Tech',      email:'t.bradley@greenleaf.tech',      phone:'+1 (503) 890-2233', status:'Follow-up',      lastContact:'Mar 7, 2026',  notes:'LinkedIn connection accepted. Follow-up tomorrow.' },
+  { id:13, firstName:'Aisha',   lastName:'Johnson',   title:'Head of Comms',        company:'Momentum Agency',     email:'a.johnson@momentum.agency',    phone:'+1 (404) 332-1190', status:'New',            lastContact:'—',            notes:'Warm intro from conference. High potential.' },
+  { id:14, firstName:'Carlos',  lastName:'Rivera',    title:'Marketing Manager',    company:'BlueSky Ventures',    email:'c.rivera@bluesky.vc',          phone:'+1 (305) 611-7733', status:'Replied',        lastContact:'Mar 10, 2026', notes:'Wants demo next week. Confirm availability.' },
+  { id:15, firstName:'Priya',   lastName:'Sharma',    title:'VP Marketing',         company:'NextWave',            email:'p.sharma@nextwave.com',         phone:'+1 (469) 500-8844', status:'Contacted',      lastContact:'Mar 5, 2026',  notes:'Sent follow-up #1. No reply yet.' },
+];
+
+let templates = [
+  {
+    id:1, name:'Initial Cold Outreach', category:'Initial',
+    subject:'Quick question about [Company]\'s marketing stack',
+    body:`Hi [FirstName],
+
+I came across [Company] and was impressed by the work you're doing — especially [specific detail].
+
+I'm reaching out because we've helped marketing teams at companies like yours cut their outreach cycle by 40% using smarter automation. I'd love to understand if that's a challenge you're currently facing.
+
+Would it be worth a quick 15-minute chat this week?
+
+Best,
+Jordan Davies
+Head of Marketing, ACME Corp`,
+    used: 34
+  },
+  {
+    id:2, name:'Follow-up #1 (3 days)', category:'Follow-up',
+    subject:'Following up — ACME for [Company]',
+    body:`Hi [FirstName],
+
+Just wanted to float my previous message to the top of your inbox — I know how busy things get.
+
+I genuinely think there's a fit here. One of our clients, similar to [Company], reduced their lead response time from 48 hours to under 4 hours after working with us.
+
+Happy to send over a short case study if that would be helpful, or jump on a quick call at your convenience.
+
+Thanks,
+Jordan`,
+    used: 27
+  },
+  {
+    id:3, name:'Follow-up #2 (7 days)', category:'Follow-up',
+    subject:'Last nudge — something I wanted to share',
+    body:`Hi [FirstName],
+
+I don't want to flood your inbox, so this will be my last follow-up for now.
+
+I wanted to share a quick win from a [Company industry] client: they generated 3x more qualified leads in their first month using our platform. I thought it might resonate.
+
+If the timing isn't right, no worries at all — feel free to reach out whenever it makes sense. I'll be here.
+
+Best,
+Jordan Davies
+ACME Corp`,
+    used: 18
+  },
+  {
+    id:4, name:'Meeting Request', category:'Meeting',
+    subject:'15 mins to show you something specific for [Company]?',
+    body:`Hi [FirstName],
+
+Thanks for the back-and-forth! Based on our conversation, I've put together a short personalised walkthrough for [Company] that I think you'll find directly relevant.
+
+Would any of these slots work for a 15-minute screen share?
+- Tue Mar 11, 2:00 PM EST
+- Wed Mar 12, 10:00 AM EST
+- Thu Mar 13, 3:30 PM EST
+
+Or feel free to grab a time directly: [calendar link]
+
+Looking forward to it,
+Jordan`,
+    used: 12
+  },
+  {
+    id:5, name:'LinkedIn Connection Request', category:'LinkedIn',
+    subject:'(LinkedIn)',
+    body:`Hi [FirstName],
+
+Noticed your work at [Company] — really impressive what your team has built around [specific area]. I work with marketing teams helping them scale outreach without losing the personal touch. Would love to connect and swap ideas.
+
+— Jordan Davies, ACME Corp`,
+    used: 41
+  },
+  {
+    id:6, name:'Post-Meeting Follow-up', category:'Post-meeting',
+    subject:'Great speaking with you, [FirstName] — next steps',
+    body:`Hi [FirstName],
+
+It was great connecting today! I really enjoyed learning more about [Company]'s approach to [topic discussed].
+
+As promised, here are the resources I mentioned:
+• [Link to case study]
+• [Link to pricing / proposal]
+
+The key next step we discussed: [specific action]. I'll plan to circle back [timeframe] unless I hear from you sooner.
+
+Don't hesitate to reach out with any questions.
+
+Best,
+Jordan Davies
+ACME Corp | +1 (646) 555-0102`,
+    used: 9
+  },
+  {
+    id:7, name:'Re-engagement (30+ days)', category:'Re-engagement',
+    subject:'Circling back — has anything changed at [Company]?',
+    body:`Hi [FirstName],
+
+Hope things are going well! I know it's been a little while since we last spoke.
+
+I wanted to reach out because [Company] recently crossed my mind — we've had a few new developments that I think could be more relevant now than when we first connected.
+
+Would it make sense to have a fresh conversation? Even 10 minutes would be worthwhile.
+
+Best regards,
+Jordan Davies
+Head of Marketing, ACME Corp`,
+    used: 7
+  },
+];
+
+let activityLog = [
+  { id:1,  date:'Mar 10, 2026', contact:'Nina Patel',    company:'Elevate Digital',     type:'Email Sent',      notes:'Meeting confirmation email with calendar invite.' },
+  { id:2,  date:'Mar 10, 2026', contact:'Carlos Rivera', company:'BlueSky Ventures',    type:'Reply Received',  notes:'Interested in a demo. Wants availability next week.' },
+  { id:3,  date:'Mar 9, 2026',  contact:'Emma Williams', company:'StartupHub',          type:'Meeting',         notes:'30-min discovery call booked for Mar 12, 2pm.' },
+  { id:4,  date:'Mar 9, 2026',  contact:'Nina Patel',    company:'Elevate Digital',     type:'Reply Received',  notes:'Confirmed meeting: Thu Mar 13, 10am. Sent calendar invite.' },
+  { id:5,  date:'Mar 8, 2026',  contact:'Sarah Chen',    company:'Nexus Technologies',  type:'Call',            notes:'30-min call. Discussed Q2 marketing budget. Strong interest. Requested proposal.' },
+  { id:6,  date:'Mar 8, 2026',  contact:'Alex Carter',   company:'PulseMedia',          type:'Reply Received',  notes:'Positive reply. Wants to see B2B SaaS case studies.' },
+  { id:7,  date:'Mar 7, 2026',  contact:'Tom Bradley',   company:'GreenLeaf Tech',      type:'LinkedIn',        notes:'LinkedIn connection accepted. Sent intro message.' },
+  { id:8,  date:'Mar 7, 2026',  contact:'Lisa Park',     company:'Innovate Labs',       type:'Reply Received',  notes:'Interested but needs product deck. Sending today.' },
+  { id:9,  date:'Mar 6, 2026',  contact:'Jessica Moore', company:'DataStream',          type:'Email Sent',      notes:'Initial cold outreach email sent.' },
+  { id:10, date:'Mar 6, 2026',  contact:'Carlos Rivera', company:'BlueSky Ventures',    type:'Email Sent',      notes:'Initial outreach email sent. Personalised for VC/portfolio co-marketing angle.' },
+  { id:11, date:'Mar 5, 2026',  contact:'Priya Sharma',  company:'NextWave',            type:'Email Sent',      notes:'Follow-up #1 sent, 3 days after initial.' },
+  { id:12, date:'Mar 5, 2026',  contact:'Sarah Chen',    company:'Nexus Technologies',  type:'Email Sent',      notes:'Follow-up email ahead of scheduled call.' },
+  { id:13, date:'Mar 4, 2026',  contact:'Lisa Park',     company:'Innovate Labs',       type:'Email Sent',      notes:'Initial outreach — personalised for startup growth angle.' },
+  { id:14, date:'Mar 4, 2026',  contact:'Alex Carter',   company:'PulseMedia',          type:'Email Sent',      notes:'Initial email. Mentioned their recent content campaign.' },
+  { id:15, date:'Mar 3, 2026',  contact:"James O'Brien", company:'TechForward',         type:'Call',            notes:'Left voicemail. Will follow up with email.' },
+  { id:16, date:'Mar 3, 2026',  contact:"James O'Brien", company:'TechForward',         type:'Email Sent',      notes:'Follow-up email sent post voicemail.' },
+  { id:17, date:'Mar 2, 2026',  contact:'Tom Bradley',   company:'GreenLeaf Tech',      type:'LinkedIn',        notes:'Sent LinkedIn connection request with personalised note.' },
+  { id:18, date:'Mar 2, 2026',  contact:'Nina Patel',    company:'Elevate Digital',     type:'Email Sent',      notes:'Initial outreach. Mentioned Elevate\'s recent Series B announcement.' },
+  { id:19, date:'Mar 1, 2026',  contact:'Michael Torres',company:'BrightPath Solutions',type:'Email Sent',      notes:'Initial cold outreach sent.' },
+  { id:20, date:'Feb 28, 2026', contact:'Priya Sharma',  company:'NextWave',            type:'Email Sent',      notes:'Initial outreach email sent.' },
+];
+
+let nextContactId = 16;
+let nextLogId = 21;
+let nextTemplateId = 8;
+let currentTemplateFilter = '';
+
+// ─── Tab Switching ───────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+  if (tab === 'contacts') renderContacts();
+  if (tab === 'templates') renderTemplates();
+  if (tab === 'log') renderLog();
+}
+
+// ─── Status Badge ─────────────────────────────────────
+function statusBadge(status) {
+  const map = {
+    'New':            'status-new',
+    'Contacted':      'status-contacted',
+    'Follow-up':      'status-followup',
+    'Replied':        'status-replied',
+    'Meeting Booked': 'status-meeting',
+    'Not Interested': 'status-notint',
+  };
+  return `<span class="text-xs px-2.5 py-1 rounded-full font-medium ${map[status] || 'bg-slate-100 text-slate-500'}">${status}</span>`;
+}
+
+function activityIcon(type) {
+  const map = {
+    'Email Sent':     { icon:'fa-envelope',         bg:'bg-indigo-100', text:'text-indigo-600' },
+    'Reply Received': { icon:'fa-reply',             bg:'bg-green-100',  text:'text-green-600' },
+    'Call':           { icon:'fa-phone',             bg:'bg-yellow-100', text:'text-yellow-600' },
+    'Meeting':        { icon:'fa-calendar-check',   bg:'bg-blue-100',   text:'text-blue-600' },
+    'LinkedIn':       { icon:'fab fa-linkedin',     bg:'bg-purple-100', text:'text-purple-600' },
+    'Note':           { icon:'fa-note-sticky',      bg:'bg-slate-100',  text:'text-slate-600' },
+  };
+  const m = map[type] || { icon:'fa-circle', bg:'bg-slate-100', text:'text-slate-500' };
+  return `<div class="w-7 h-7 rounded-full ${m.bg} flex items-center justify-center flex-shrink-0">
+    <i class="${m.icon} ${m.text} text-xs"></i></div>`;
+}
+
+// ─── Contacts ─────────────────────────────────────────
+function renderContacts(list) {
+  const data = list || contacts;
+  const tbody = document.getElementById('contacts-tbody');
+  document.getElementById('contact-count').textContent = `${data.length} contact${data.length !== 1 ? 's' : ''}`;
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-12 text-slate-400 text-sm">No contacts found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(c => `
+    <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+      <td class="px-5 py-3.5">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 flex items-center justify-center text-indigo-700 text-xs font-bold flex-shrink-0">${c.firstName[0]}${c.lastName[0]}</div>
+          <div>
+            <div class="text-sm font-medium text-slate-800">${c.firstName} ${c.lastName}</div>
+            ${c.notes ? `<div class="text-xs text-slate-400 truncate max-w-[160px]" title="${c.notes}">${c.notes.substring(0,45)}${c.notes.length>45?'…':''}</div>` : ''}
+          </div>
+        </div>
+      </td>
+      <td class="px-5 py-3.5 text-sm text-slate-700">${c.company}</td>
+      <td class="px-5 py-3.5 text-sm text-slate-500">${c.title}</td>
+      <td class="px-5 py-3.5"><a href="mailto:${c.email}" class="text-sm text-brand-600 hover:underline">${c.email}</a></td>
+      <td class="px-5 py-3.5">${statusBadge(c.status)}</td>
+      <td class="px-5 py-3.5 text-sm text-slate-500">${c.lastContact}</td>
+      <td class="px-5 py-3.5">
+        <div class="flex items-center gap-1">
+          <button onclick="logForContact(${c.id})" class="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Log activity"><i class="fa-solid fa-plus text-xs"></i></button>
+          <button onclick="deleteContact(${c.id})" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  // Populate company filter
+  const sel = document.getElementById('company-filter');
+  const current = sel.value;
+  const companies = [...new Set(contacts.map(c => c.company))].sort();
+  sel.innerHTML = '<option value="">All Companies</option>' + companies.map(co => `<option value="${co}" ${co===current?'selected':''}>${co}</option>`).join('');
+}
+
+function filterContacts() {
+  const q = document.getElementById('contact-search').value.toLowerCase();
+  const st = document.getElementById('status-filter').value;
+  const co = document.getElementById('company-filter').value;
+  const filtered = contacts.filter(c => {
+    const match = `${c.firstName} ${c.lastName} ${c.company} ${c.email} ${c.title}`.toLowerCase().includes(q);
+    const statusMatch = !st || c.status === st;
+    const companyMatch = !co || c.company === co;
+    return match && statusMatch && companyMatch;
+  });
+  renderContacts(filtered);
+}
+
+function deleteContact(id) {
+  if (!confirm('Delete this contact?')) return;
+  contacts = contacts.filter(c => c.id !== id);
+  filterContacts();
+  updateBadge();
+  showToast('Contact deleted.');
+}
+
+function updateBadge() {
+  document.getElementById('contacts-badge').textContent = contacts.length;
+  document.getElementById('stat-total').textContent = contacts.length;
+}
+
+// ─── Add Contact ─────────────────────────────────────
+function openAddContactModal() {
+  ['c-firstname','c-lastname','c-title','c-company','c-email','c-phone','c-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('c-status').value = 'New';
+  document.getElementById('modal-contact').classList.remove('hidden');
+}
+
+function saveContact() {
+  const fn = document.getElementById('c-firstname').value.trim();
+  const ln = document.getElementById('c-lastname').value.trim();
+  const co = document.getElementById('c-company').value.trim();
+  const em = document.getElementById('c-email').value.trim();
+  if (!fn || !ln || !co || !em) { alert('Please fill in required fields.'); return; }
+  contacts.push({
+    id: nextContactId++,
+    firstName: fn, lastName: ln,
+    title: document.getElementById('c-title').value.trim(),
+    company: co, email: em,
+    phone: document.getElementById('c-phone').value.trim(),
+    status: document.getElementById('c-status').value,
+    lastContact: '—',
+    notes: document.getElementById('c-notes').value.trim(),
+  });
+  closeModal('modal-contact');
+  renderContacts();
+  updateBadge();
+  showToast(`${fn} ${ln} added.`);
+}
+
+// ─── Templates ────────────────────────────────────────
+function tagClass(cat) {
+  const map = {
+    'Initial':'tag-initial','Follow-up':'tag-followup','Meeting':'tag-meeting',
+    'LinkedIn':'tag-linkedin','Re-engagement':'tag-reeng','Post-meeting':'tag-postmeet',
+  };
+  return map[cat] || 'bg-slate-100 text-slate-600';
+}
+
+function renderTemplates(list) {
+  const data = list || templates;
+  const grid = document.getElementById('templates-grid');
+  if (!data.length) {
+    grid.innerHTML = '<div class="col-span-2 text-center py-12 text-slate-400 text-sm">No templates found.</div>';
+    return;
+  }
+  grid.innerHTML = data.map(t => `
+    <div class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="font-semibold text-slate-800 text-sm">${t.name}</h3>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium ${tagClass(t.category)}">${t.category}</span>
+          </div>
+          ${t.subject ? `<p class="text-xs text-slate-400 mt-1 truncate">Subject: ${t.subject}</p>` : ''}
+        </div>
+        <div class="flex items-center gap-1 ml-3 flex-shrink-0">
+          <button onclick="copyTemplate(${t.id})" class="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Copy"><i class="fa-solid fa-copy text-xs"></i></button>
+          <button onclick="deleteTemplate(${t.id})" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
+        </div>
+      </div>
+      <div class="bg-slate-50 rounded-lg p-3 text-xs text-slate-600 font-mono leading-relaxed overflow-hidden max-h-36 relative">
+        ${t.body.replace(/\n/g,'<br>')}
+        <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-slate-50 to-transparent pointer-events-none"></div>
+      </div>
+      <div class="flex items-center justify-between mt-3">
+        <span class="text-xs text-slate-400"><i class="fa-solid fa-chart-bar mr-1"></i>Used ${t.used} times</span>
+        <button onclick="copyTemplate(${t.id})" class="text-xs text-brand-600 hover:underline font-medium">Copy to clipboard</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterTemplates(cat) {
+  currentTemplateFilter = cat;
+  document.querySelectorAll('.template-cat-btn').forEach(btn => {
+    btn.className = btn.className.replace('bg-brand-600 text-white','bg-white border border-slate-200 text-slate-600');
+  });
+  const activeId = 'tcat-' + (cat || 'all');
+  const activeBtn = document.getElementById(activeId);
+  if (activeBtn) activeBtn.className = activeBtn.className.replace('bg-white border border-slate-200 text-slate-600','bg-brand-600 text-white');
+  const filtered = cat ? templates.filter(t => t.category === cat) : templates;
+  renderTemplates(filtered);
+}
+
+function copyTemplate(id) {
+  const t = templates.find(t => t.id === id);
+  if (!t) return;
+  navigator.clipboard.writeText(`Subject: ${t.subject}\n\n${t.body}`).then(() => showToast('Template copied to clipboard!')).catch(() => showToast('Copy failed. Try manually.'));
+}
+
+function deleteTemplate(id) {
+  if (!confirm('Delete this template?')) return;
+  templates = templates.filter(t => t.id !== id);
+  filterTemplates(currentTemplateFilter);
+  showToast('Template deleted.');
+}
+
+function openAddTemplateModal() {
+  ['t-name','t-subject','t-body'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('t-category').value = 'Initial';
+  document.getElementById('modal-template').classList.remove('hidden');
+}
+
+function saveTemplate() {
+  const name = document.getElementById('t-name').value.trim();
+  const body = document.getElementById('t-body').value.trim();
+  if (!name || !body) { alert('Name and body are required.'); return; }
+  templates.push({
+    id: nextTemplateId++,
+    name, category: document.getElementById('t-category').value,
+    subject: document.getElementById('t-subject').value.trim(),
+    body, used: 0,
+  });
+  closeModal('modal-template');
+  filterTemplates(currentTemplateFilter);
+  showToast(`Template "${name}" saved.`);
+}
+
+// ─── Activity Log ─────────────────────────────────────
+function renderLog(list) {
+  const data = list || activityLog;
+  const tbody = document.getElementById('log-tbody');
+  document.getElementById('log-count').textContent = `${data.length} entr${data.length !== 1 ? 'ies' : 'y'}`;
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-slate-400 text-sm">No log entries found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(entry => `
+    <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+      <td class="px-5 py-3.5 text-sm text-slate-500 whitespace-nowrap">${entry.date}</td>
+      <td class="px-5 py-3.5">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 flex items-center justify-center text-indigo-700 text-xs font-bold flex-shrink-0">${entry.contact.split(' ').map(n=>n[0]).join('').substring(0,2)}</div>
+          <span class="text-sm font-medium text-slate-800">${entry.contact}</span>
+        </div>
+      </td>
+      <td class="px-5 py-3.5 text-sm text-slate-500">${entry.company}</td>
+      <td class="px-5 py-3.5">
+        <div class="flex items-center gap-2">
+          ${activityIcon(entry.type)}
+          <span class="text-sm text-slate-700">${entry.type}</span>
+        </div>
+      </td>
+      <td class="px-5 py-3.5 text-sm text-slate-500 max-w-xs"><span class="truncate block" title="${entry.notes}">${entry.notes}</span></td>
+      <td class="px-5 py-3.5">
+        <button onclick="deleteLogEntry(${entry.id})" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterLog() {
+  const q = document.getElementById('log-search').value.toLowerCase();
+  const tp = document.getElementById('log-type-filter').value;
+  const filtered = activityLog.filter(e => {
+    const match = `${e.contact} ${e.company} ${e.notes} ${e.type}`.toLowerCase().includes(q);
+    const typeMatch = !tp || e.type === tp;
+    return match && typeMatch;
+  });
+  renderLog(filtered);
+}
+
+function deleteLogEntry(id) {
+  if (!confirm('Delete this log entry?')) return;
+  activityLog = activityLog.filter(e => e.id !== id);
+  filterLog();
+  showToast('Entry deleted.');
+}
+
+function openAddLogModal() {
+  const sel = document.getElementById('l-contact');
+  sel.innerHTML = '<option value="">Select a contact...</option>' + contacts.map(c => `<option value="${c.firstName} ${c.lastName}|${c.company}">${c.firstName} ${c.lastName} — ${c.company}</option>`).join('');
+  document.getElementById('l-notes').value = '';
+  document.getElementById('l-type').value = 'Email Sent';
+  document.getElementById('l-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('modal-log').classList.remove('hidden');
+}
+
+function logForContact(contactId) {
+  switchTab('log');
+  setTimeout(() => {
+    const c = contacts.find(c => c.id === contactId);
+    openAddLogModal();
+    if (c) document.getElementById('l-contact').value = `${c.firstName} ${c.lastName}|${c.company}`;
+  }, 50);
+}
+
+function saveLogEntry() {
+  const cv = document.getElementById('l-contact').value;
+  const dt = document.getElementById('l-date').value;
+  if (!cv || !dt) { alert('Contact and date are required.'); return; }
+  const [name, company] = cv.split('|');
+  const dateObj = new Date(dt + 'T00:00:00');
+  const formatted = dateObj.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  activityLog.unshift({
+    id: nextLogId++,
+    date: formatted,
+    contact: name,
+    company,
+    type: document.getElementById('l-type').value,
+    notes: document.getElementById('l-notes').value.trim() || '—',
+  });
+  closeModal('modal-log');
+  filterLog();
+  showToast('Activity logged.');
+}
+
+// ─── Modals ───────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+document.querySelectorAll('[id^="modal-"]').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+});
+
+// ─── Toast ────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  document.getElementById('toast-msg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.remove('hidden');
+  t.classList.add('flex');
+  toastTimer = setTimeout(() => { t.classList.add('hidden'); t.classList.remove('flex'); }, 2800);
+}
+
+// ─── Init ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderContacts();
+  renderTemplates();
+  renderLog();
+});
+</script>
+</body>
+</html>
