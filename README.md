@@ -1,53 +1,66 @@
 # Outreach Planner
 
-A single-file outreach management tool. No backend, no database, no installation — just open the HTML file in your browser.
+A full-featured outreach CRM in a single HTML file. No backend, no subscriptions, no vendor lock-in.
 
 ![Dashboard](screenshots/home.png)
+
+## Why This Exists
+
+Most outreach tools are SaaS products that cost $30–100/month, lock your data behind APIs, and require onboarding your whole team. For solo founders, freelancers, and small marketing teams running link building, partnerships, or guest post campaigns — that's overkill.
+
+Outreach Planner is the opposite:
+
+- **One file.** Download it, double-click it, start working. No npm, no Docker, no accounts.
+- **Works offline.** No internet needed. Open from your desktop, a USB drive, or any folder. Everything — CSS, fonts, icons — is embedded inline.
+- **Your data stays yours.** Data lives in your browser's localStorage. Export it as JSON anytime. No cloud, no tracking, no third-party access.
+- **LLM-friendly.** Export your contacts and activity log as a single JSON file, paste it into ChatGPT/Claude, and ask it to draft follow-ups, prioritise your pipeline, or analyse response rates. The data format is clean and flat — no nested IDs or foreign keys to decode.
+- **White-label ready.** Change the name, colours, logo, and user profile in Settings. Use it for different clients or projects without touching code.
+- **Fork and customise.** It's vanilla HTML + JS. No framework, no build step. Read it, change it, ship it.
+
+## Who It's For
+
+- Solo founders doing their own outreach
+- Freelancers managing link building campaigns
+- Small marketing teams that don't need a full CRM
+- Anyone who wants a portable, offline outreach tracker they actually own
 
 ## Features
 
 ### Dashboard
-- Greeting with time-of-day and user name
-- Stats: Total Contacts, In Pipeline, Converted, Follow-ups Due
-- Outreach Pipeline with per-status breakdown
+- At-a-glance stats: Total Contacts, In Pipeline, Converted, Follow-ups Due
+- Outreach Pipeline with per-status breakdown and progress bars
 - Priority breakdown with contacted ratios
-- Recent activity feed
-- Upcoming follow-ups (clickable)
+- Recent activity feed and upcoming follow-ups
 
 ### Contacts
-- 50 sample contacts across 15+ countries
 - Sortable columns: Organisation, Status, Priority, Type, Country, Follow-up, Last Contact
 - Pagination (15 per page)
 - Search + filter by status, priority, outreach type
-- Add / Edit / Delete via modal
 - Contact detail drawer with full info and activity history
 
 ### Email Templates
 - Two-panel layout: sidebar list + full preview
-- Search and category filter
-- "When to use" guidance notes
+- "When to use" guidance notes per template
 - Placeholder support: `[FirstName]`, `[Company]`, `[Title]`
-- Copy to clipboard
+- One-click copy to clipboard
 
 ### Activity Log
-- Inline add-entry form + log table
-- Sortable columns (Contact, Activity, Response)
+- Inline add-entry form + sortable log table
 - Clickable contact names (navigates to contact drawer)
-- Edit / Delete entries
+- Track type, date, template used, response, next action
 
-### Settings
-- App name, subtext, brand colour (8 palettes)
-- Logo icon picker (10 options) or custom image upload
-- Sidebar colour auto-adapts to brand
-- User name and title
+### Settings & Branding
+- 8 brand colour palettes (sidebar auto-adapts)
+- 10 icon options or custom logo image upload
+- App name, tagline, user profile — all customisable
 
 ### Data Safety
 - Auto-saves to localStorage on every change
-- Export / Import JSON
-- Auto-backup download before Reset or Import
-- Change counter with backup reminder after 10 unsaved changes
-- Browser exit warning when changes are unsaved
-- Backup status indicator in sidebar
+- Export / Import JSON (shareable, portable, LLM-ready)
+- Auto-backup download before any destructive action
+- Change counter with reminder after 10 unsaved changes
+- Browser exit warning when you have unsaved work
+- Backup status indicator always visible in sidebar
 
 ## Screenshots
 
@@ -65,73 +78,53 @@ A single-file outreach management tool. No backend, no database, no installation
 
 ## Getting Started
 
-No installation needed. Just open the file:
+No installation needed.
 
 ```bash
-# Clone the repo
 git clone <repo-url>
 cd outreach-planner
+```
 
-# Open in browser
+Then open `outreach-planner.html` in your browser:
+
+```bash
 open outreach-planner.html       # macOS
 start outreach-planner.html      # Windows
 xdg-open outreach-planner.html   # Linux
 ```
 
-Or double-click `outreach-planner.html` in your file explorer.
+Or just double-click the file. Works from `file://` — no server required.
 
-Works fully offline via `file://` protocol — no server required.
+## Using with LLMs
 
-## Usage
+Export your data as JSON (Dashboard > Export or Settings > Export JSON), then paste it into any LLM:
 
-### Managing Contacts
+- *"Here's my outreach data. Which contacts should I follow up with this week?"*
+- *"Draft a follow-up email for the contacts marked 'Contacted' who haven't replied in 7 days."*
+- *"Analyse my response rates by outreach type and suggest what's working."*
+- *"Prioritise my pipeline — who should I focus on first?"*
 
-1. Click **Add Contact** from the Dashboard or Contacts tab
-2. Fill in name, company, email, country, status, priority, and outreach type
-3. Use search and filters to find contacts quickly
-4. Click any row to open the contact detail drawer
-5. Click the pencil icon to edit, or the **+** icon to log an activity
-
-### Using Templates
-
-1. Browse templates in the sidebar list
-2. Click a template to preview it
-3. Click **Copy to Clipboard** to grab subject + body
-4. Paste into your email client and replace `[FirstName]`, `[Company]` placeholders
-
-### Logging Activities
-
-1. Go to the **Activity Log** tab
-2. Use the inline form on the left to select a contact, type, date, and notes
-3. Click **Log It**
-4. Click any contact name in the log to jump to their detail view
-
-### Backing Up Data
-
-- Click **Export** on the Dashboard or in Settings to download a JSON backup
-- The sidebar shows your backup status (green = recent, amber = overdue, red = never)
-- Before any destructive action (Reset, Import), a backup is auto-downloaded
-- The browser will warn you before closing if you have 10+ unsaved changes
+The JSON format is flat and readable — contacts, templates, and activity log in one file. No preprocessing needed.
 
 ## Customisation
 
-Open **Settings** to rebrand:
+Open **Settings** to rebrand the entire app:
 
 - Change the app name and tagline
-- Pick a brand colour (sidebar adapts automatically)
-- Choose a logo icon or upload a custom image
+- Pick from 8 brand colour palettes (sidebar adapts automatically)
+- Choose a logo icon or upload your own image
 - Set your name and title
 
-All settings persist in localStorage.
+All settings persist in localStorage. Use different brands for different projects.
 
 ## Tech Stack
 
-- Single HTML file (~490 KB)
-- Tailwind CSS (inlined, only used classes)
-- Font Awesome 6 (inlined, 44 icons + 2 webfonts as base64)
-- Vanilla JavaScript, no build step, no dependencies
+- Single HTML file (~490 KB, fully self-contained)
+- Tailwind CSS (inlined, only used classes — no CDN)
+- Font Awesome 6 (44 icons + 2 webfonts inlined as base64 — no CDN)
+- Vanilla JavaScript, no framework, no build step
 - localStorage for persistence
-- Works offline, no CDN required
+- Zero external dependencies
 
 ## Project Structure
 
@@ -139,16 +132,9 @@ All settings persist in localStorage.
 outreach-planner/
   outreach-planner.html   # The app (single file, fully self-contained)
   data/
-    defaults.json          # Reference copy of default data (not loaded at runtime)
-  screenshots/
-    home.png               # Dashboard
-    contacts.png           # Contacts tab
-    templates.png          # Templates tab
-    log.png                # Activity Log tab
-    settings.png           # Settings modal
-    contact-detail.png     # Contact drawer
-  planning/
-    improvements.md        # Feature ideas and roadmap notes
+    defaults.json          # Reference copy of sample data (not loaded at runtime)
+  screenshots/             # App screenshots
+  planning/                # Feature ideas and roadmap notes
 ```
 
 ## License
