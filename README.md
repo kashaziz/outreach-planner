@@ -2,6 +2,8 @@
 
 A full-featured outreach CRM in a single HTML file. No backend, no subscriptions, no vendor lock-in.
 
+**[Try the live demo →](https://kashifaziz.me/outreach-planner/)**
+
 ![Dashboard](screenshots/home.png)
 
 ## Why This Exists
