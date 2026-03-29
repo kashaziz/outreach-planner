@@ -81,7 +81,7 @@ Outreach Planner is the opposite:
 No installation needed.
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/kashaziz/outreach-planner.git
 cd outreach-planner
 ```
 
@@ -136,6 +136,45 @@ outreach-planner/
   screenshots/             # App screenshots
   planning/                # Feature ideas and roadmap notes
 ```
+
+## Contributing
+
+Contributions are welcome! Here's how:
+
+1. **Fork** the repository
+2. **Clone** your fork locally
+   ```bash
+   git clone https://github.com/<your-username>/outreach-planner.git
+   cd outreach-planner
+   ```
+3. **Create a branch** for your feature or fix
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+4. **Make your changes** — everything lives in `outreach-planner.html`
+5. **Test locally** — open the file in your browser via `file://` and verify it works offline
+6. **Commit** with a clear message explaining what and why
+   ```bash
+   git add outreach-planner.html
+   git commit -m "Add: brief description of your change"
+   ```
+7. **Push** to your fork
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+8. **Open a Pull Request** against `main` with a short summary of what you changed and why
+
+### Guidelines
+
+- Keep it as a **single HTML file** — no external dependencies, no build step
+- Test with `file://` protocol (no local server) to ensure offline compatibility
+- Don't add CDN links — all CSS/fonts/icons must be inlined
+- Match the existing code style (vanilla JS, Tailwind utility classes)
+- If adding a new feature, include a brief description in your PR
+
+### Ideas for Contribution
+
+Check [planning/improvements.md](planning/improvements.md) for feature ideas, or open an issue to discuss before starting large changes.
 
 ## License
 
